@@ -64,13 +64,13 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				crm: {
-					blue: 'hsl(var(--crm-blue))',
-					lightBlue: 'hsl(var(--crm-light-blue))',
-					darkBlue: 'hsl(var(--crm-dark-blue))',
-					gray: 'hsl(var(--crm-gray))',
-					green: 'hsl(var(--crm-green))',
-					red: 'hsl(var(--crm-red))',
-					yellow: 'hsl(var(--crm-yellow))',
+					blue: '#0D6EFD',
+					lightBlue: '#E6F0FF',
+					darkBlue: '#0A58CA',
+					gray: '#F8F9FA',
+					green: '#198754',
+					red: '#DC3545',
+					yellow: '#FFC107',
 				}
 			},
 			borderRadius: {
