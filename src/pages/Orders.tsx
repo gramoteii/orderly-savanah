@@ -4,17 +4,10 @@ import Layout from '../components/Layout';
 import OrderFilter from '../components/OrderFilter';
 import OrderTable from '../components/OrderTable';
 import OrderBoard from '../components/OrderBoard'; 
-import OrderForm from '../components/OrderForm';
-import DeleteOrderDialog from '../components/DeleteOrderDialog';
 import { useOrderStore } from '../store/orderStore';
 import { Button } from '@/components/ui/button';
-import { 
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle
-} from "@/components/ui/resizable";
+import { FileCode, PlusCircle, List, Kanban } from 'lucide-react';
 import { useState } from 'react';
-import { List, Kanban, FileCode, PlusCircle } from 'lucide-react';
 
 const Orders: React.FC = () => {
   const { filterOrders, setCurrentOrder, setEditModalOpen } = useOrderStore();
@@ -70,9 +63,6 @@ const Orders: React.FC = () => {
       ) : (
         <OrderBoard />
       )}
-      
-      <OrderForm />
-      <DeleteOrderDialog />
     </Layout>
   );
 };

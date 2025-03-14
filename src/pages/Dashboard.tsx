@@ -1,22 +1,43 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import StatCard from '../components/StatCard';
+import RevenueChart from '../components/RevenueChart';
 import { useOrderStore } from '../store/orderStore';
 import { OrderStatus } from '../data/orders';
-import { FileText, Check, Clock, X } from 'lucide-react';
+import { FileText, Check, Clock, X, Users, BarChart, Briefcase } from 'lucide-react';
+import { useClientStore } from '../store/clientStore';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+  generateDailyData,
+  generateWeeklyData,
+  generateMonthlyData,
+  generateQuarterlyData,
+  generateYearlyData
+} from '../utils/chartDataGenerator';
 
 const Dashboard: React.FC = () => {
   const { orders } = useOrderStore();
+  const { clients } = useClientStore();
+  
+  const [chartData, setChartData] = useState({
+    daily: generateDailyData(),
+    weekly: generateWeeklyData(),
+    monthly: generateMonthlyData(),
+    quarterly: generateQuarterlyData(),
+    yearly: generateYearlyData()
+  });
+  
+  // Re-generate data when component mounts
+  useEffect(() => {
+    setChartData({
+      daily: generateDailyData(),
+      weekly: generateWeeklyData(),
+      monthly: generateMonthlyData(),
+      quarterly: generateQuarterlyData(),
+      yearly: generateYearlyData()
+    });
+  }, []);
 
   // Calculate statistics
   const countByStatus = (status: OrderStatus) => {
@@ -26,83 +47,112 @@ const Dashboard: React.FC = () => {
   const totalRevenue = orders
     .filter(order => order.status === 'completed')
     .reduce((sum, order) => sum + order.total, 0);
+    
+  const averageOrderValue = orders.length > 0 
+    ? Math.round(orders.reduce((sum, order) => sum + order.total, 0) / orders.length) 
+    : 0;
 
-  // Data for chart
-  const chartData = [
-    { name: 'Новые', value: countByStatus('new') },
-    { name: 'В обработке', value: countByStatus('processing') },
-    { name: 'Завершенные', value: countByStatus('completed') },
-    { name: 'Отмененные', value: countByStatus('cancelled') },
-  ];
+  // Calculate completion ratio
+  const completedOrders = countByStatus('completed');
+  const completionRatio = orders.length > 0 
+    ? Math.round((completedOrders / orders.length) * 100) 
+    : 0;
 
   return (
     <Layout>
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Всего заказов"
+            title="Всего проектов"
             value={orders.length}
-            icon={<FileText className="w-6 h-6 text-white" />}
+            icon={<Briefcase className="w-6 h-6 text-white" />}
             color="bg-crm-blue"
           />
           <StatCard
             title="Завершенные"
-            value={countByStatus('completed')}
+            value={`${completedOrders} (${completionRatio}%)`}
             icon={<Check className="w-6 h-6 text-white" />}
             color="bg-crm-green"
           />
           <StatCard
-            title="В обработке"
-            value={countByStatus('processing')}
-            icon={<Clock className="w-6 h-6 text-white" />}
+            title="Клиенты"
+            value={clients.length}
+            icon={<Users className="w-6 h-6 text-white" />}
             color="bg-crm-yellow"
           />
           <StatCard
             title="Выручка"
             value={`${totalRevenue.toLocaleString()} ₽`}
-            icon={<FileText className="w-6 h-6 text-white" />}
+            icon={<BarChart className="w-6 h-6 text-white" />}
             color="bg-crm-blue"
           />
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold mb-4">Статистика заказов</h2>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#0D6EFD" />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <RevenueChart 
+              dailyData={chartData.daily}
+              weeklyData={chartData.weekly}
+              monthlyData={chartData.monthly}
+              quarterlyData={chartData.quarterly}
+              yearlyData={chartData.yearly}
+            />
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold mb-4">Последние заказы</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="crm-table-header">№ заказа</th>
-                  <th className="crm-table-header">Дата</th>
-                  <th className="crm-table-header">Клиент</th>
-                  <th className="crm-table-header">Сумма</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {orders.slice(0, 5).map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="crm-table-cell font-medium">{order.number}</td>
-                    <td className="crm-table-cell">{order.date}</td>
-                    <td className="crm-table-cell">{order.customer.name}</td>
-                    <td className="crm-table-cell font-medium">{order.total.toLocaleString()} ₽</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Статистика проектов</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Новые проекты</span>
+                    <span className="font-medium">{countByStatus('new')}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">В работе</span>
+                    <span className="font-medium">{countByStatus('processing')}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Завершенные</span>
+                    <span className="font-medium">{countByStatus('completed')}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Отмененные</span>
+                    <span className="font-medium">{countByStatus('cancelled')}</span>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Средний чек</span>
+                      <span className="font-medium">{averageOrderValue.toLocaleString()} ₽</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Последние проекты</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {orders.slice(0, 5).map((order) => (
+                    <div key={order.id} className="flex justify-between">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{order.number}</span>
+                        <span className="text-xs text-muted-foreground">{order.customer.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-medium">{order.total.toLocaleString()} ₽</span>
+                        <span className="text-xs text-muted-foreground block">{order.date}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
