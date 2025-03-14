@@ -53,7 +53,7 @@ const MonthlyRevenueChart = () => {
   }, [orders]);
 
   return (
-    <Card className="col-span-2">
+    <Card className="col-span-2 mb-6">
       <CardHeader>
         <CardTitle>Выручка по месяцам ({new Date().getFullYear()})</CardTitle>
         <CardDescription>

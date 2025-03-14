@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -149,14 +151,16 @@ const OrderForm: React.FC = () => {
   };
 
   const handleServiceSelect = (id: string, serviceName: string) => {
+    if (serviceName === 'custom') {
+      handleItemChange(id, 'name', '');
+      handleItemChange(id, 'price', 0);
+      return;
+    }
+
     const service = webStudioServices.find(s => s.name === serviceName);
-    
     if (service) {
       handleItemChange(id, 'name', service.name);
       handleItemChange(id, 'price', service.defaultPrice);
-    } else if (serviceName === 'custom') {
-      handleItemChange(id, 'name', 'custom');
-      handleItemChange(id, 'price', 0);
     }
   };
 
@@ -226,6 +230,9 @@ const OrderForm: React.FC = () => {
           <DialogTitle>
             {currentOrder ? 'Редактировать заказ' : 'Создать новый заказ'}
           </DialogTitle>
+          <DialogDescription>
+            Заполните информацию о заказе и услугах
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -346,11 +353,11 @@ const OrderForm: React.FC = () => {
                       <SelectItem value="custom">Другое</SelectItem>
                     </SelectContent>
                   </Select>
-                  {item.name === 'custom' && (
+                  {item.name === '' && (
                     <Input
                       className="mt-2"
                       placeholder="Введите название услуги"
-                      value={item.name === 'custom' ? '' : item.name}
+                      value={item.name}
                       onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
                     />
                   )}
@@ -363,7 +370,7 @@ const OrderForm: React.FC = () => {
                     min="1"
                     value={item.quantity}
                     onChange={(e) => 
-                      handleItemChange(item.id, 'quantity', parseInt(e.target.value))
+                      handleItemChange(item.id, 'quantity', parseInt(e.target.value) || 1)
                     }
                     required
                   />
@@ -376,7 +383,7 @@ const OrderForm: React.FC = () => {
                     min="0"
                     value={item.price}
                     onChange={(e) => 
-                      handleItemChange(item.id, 'price', parseInt(e.target.value))
+                      handleItemChange(item.id, 'price', parseInt(e.target.value) || 0)
                     }
                     required
                   />
