@@ -20,8 +20,23 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Order, OrderStatus, OrderItem } from '../data/orders';
 import { useOrderStore } from '../store/orderStore';
-import { Plus, Trash } from 'lucide-react';
+import { useClientStore } from '../store/clientStore';
+import { Plus, Trash, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+// Services specific to an IT/web studio
+const webStudioServices = [
+  { name: 'Разработка веб-сайта', defaultPrice: 100000 },
+  { name: 'Дизайн UI/UX', defaultPrice: 50000 },
+  { name: 'Разработка мобильного приложения', defaultPrice: 200000 },
+  { name: 'SEO-оптимизация', defaultPrice: 30000 },
+  { name: 'Техническая поддержка', defaultPrice: 20000 },
+  { name: 'Редизайн сайта', defaultPrice: 70000 },
+  { name: 'Настройка CRM', defaultPrice: 40000 },
+  { name: 'Разработка логотипа', defaultPrice: 25000 },
+  { name: 'SMM-продвижение', defaultPrice: 35000 },
+  { name: 'Контекстная реклама', defaultPrice: 30000 },
+];
 
 const generateOrderNumber = () => {
   return `ORD-${Math.floor(100 + Math.random() * 900)}`;
@@ -44,13 +59,15 @@ const OrderForm: React.FC = () => {
     addOrder, 
     updateOrder 
   } = useOrderStore();
+  
+  const { clients, incrementClientOrders, decrementClientOrders } = useClientStore();
 
   const defaultOrder = {
     number: generateOrderNumber(),
     date: getCurrentDate(),
     status: 'new' as OrderStatus,
     customer: {
-      id: nanoid(),
+      id: '',
       name: '',
       email: '',
       phone: ''
@@ -68,12 +85,15 @@ const OrderForm: React.FC = () => {
   };
 
   const [formData, setFormData] = useState<Omit<Order, 'id'>>(defaultOrder);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
 
   useEffect(() => {
     if (currentOrder) {
       setFormData(currentOrder);
+      setSelectedClientId(currentOrder.customer.id);
     } else {
       setFormData(defaultOrder);
+      setSelectedClientId('');
     }
   }, [currentOrder, isEditModalOpen]);
 
@@ -129,13 +149,37 @@ const OrderForm: React.FC = () => {
     });
   };
 
+  const handleServiceSelect = (id: string, serviceName: string) => {
+    const service = webStudioServices.find(s => s.name === serviceName);
+    if (service) {
+      handleItemChange(id, 'name', service.name);
+      handleItemChange(id, 'price', service.defaultPrice);
+    }
+  };
+
+  const handleClientSelect = (clientId: string) => {
+    const selectedClient = clients.find(client => client.id === clientId);
+    if (selectedClient) {
+      setSelectedClientId(clientId);
+      setFormData({
+        ...formData,
+        customer: {
+          id: selectedClient.id,
+          name: selectedClient.name,
+          email: selectedClient.email,
+          phone: selectedClient.phone
+        }
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.customer.name || !formData.customer.email || !formData.customer.phone) {
+    if (!formData.customer.id) {
       toast({
         title: "Ошибка",
-        description: "Пожалуйста, заполните данные клиента",
+        description: "Пожалуйста, выберите клиента",
         variant: "destructive"
       });
       return;
@@ -144,7 +188,7 @@ const OrderForm: React.FC = () => {
     if (formData.items.some(item => !item.name || item.price <= 0)) {
       toast({
         title: "Ошибка",
-        description: "Пожалуйста, заполните данные всех товаров",
+        description: "Пожалуйста, заполните данные всех услуг",
         variant: "destructive"
       });
       return;
@@ -161,6 +205,8 @@ const OrderForm: React.FC = () => {
       });
     } else {
       addOrder(formData);
+      // Increment the client's order count
+      incrementClientOrders(formData.customer.id);
       toast({
         title: "Успешно",
         description: "Заказ успешно создан"
@@ -212,7 +258,7 @@ const OrderForm: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="new">Новый</SelectItem>
-                  <SelectItem value="processing">В обработке</SelectItem>
+                  <SelectItem value="processing">В разработке</SelectItem>
                   <SelectItem value="completed">Завершен</SelectItem>
                   <SelectItem value="cancelled">Отменен</SelectItem>
                 </SelectContent>
@@ -222,56 +268,50 @@ const OrderForm: React.FC = () => {
 
           <div className="border-t pt-4">
             <h3 className="text-lg font-medium mb-4">Данные клиента</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="customerName">Имя</Label>
-                <Input
-                  id="customerName"
-                  value={formData.customer.name}
-                  onChange={(e) => 
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, name: e.target.value }
-                    })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="customerEmail">Email</Label>
-                <Input
-                  id="customerEmail"
-                  type="email"
-                  value={formData.customer.email}
-                  onChange={(e) => 
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, email: e.target.value }
-                    })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="customerPhone">Телефон</Label>
-                <Input
-                  id="customerPhone"
-                  value={formData.customer.phone}
-                  onChange={(e) => 
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, phone: e.target.value }
-                    })
-                  }
-                  required
-                />
-              </div>
+            <div className="mb-4">
+              <Label htmlFor="client">Выберите клиента</Label>
+              <Select
+                value={selectedClientId}
+                onValueChange={handleClientSelect}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите клиента" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>{client.name}</span>
+                        {client.company && <span className="text-gray-500">({client.company})</span>}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {selectedClientId && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Имя</Label>
+                  <Input value={formData.customer.name} readOnly className="bg-gray-50" />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input value={formData.customer.email} readOnly className="bg-gray-50" />
+                </div>
+                <div>
+                  <Label>Телефон</Label>
+                  <Input value={formData.customer.phone} readOnly className="bg-gray-50" />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border-t pt-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Товары</h3>
+              <h3 className="text-lg font-medium">Услуги</h3>
               <Button 
                 type="button" 
                 variant="outline" 
@@ -279,20 +319,38 @@ const OrderForm: React.FC = () => {
                 onClick={handleAddItem}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Добавить товар
+                Добавить услугу
               </Button>
             </div>
             
             {formData.items.map((item, index) => (
               <div key={item.id} className="grid grid-cols-12 gap-4 mb-4">
                 <div className="col-span-5">
-                  <Label htmlFor={`item-name-${index}`}>Наименование</Label>
-                  <Input
-                    id={`item-name-${index}`}
+                  <Label htmlFor={`item-name-${index}`}>Услуга</Label>
+                  <Select
                     value={item.name}
-                    onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
-                    required
-                  />
+                    onValueChange={(value) => handleServiceSelect(item.id, value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите услугу" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {webStudioServices.map((service) => (
+                        <SelectItem key={service.name} value={service.name}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="custom">Другое</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {item.name === 'custom' && (
+                    <Input
+                      className="mt-2"
+                      placeholder="Введите название услуги"
+                      value={item.name === 'custom' ? '' : item.name}
+                      onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
+                    />
+                  )}
                 </div>
                 <div className="col-span-2">
                   <Label htmlFor={`item-quantity-${index}`}>Кол-во</Label>
@@ -349,6 +407,7 @@ const OrderForm: React.FC = () => {
               value={formData.comments || ''}
               onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
               rows={3}
+              placeholder="Сроки, особые требования, дополнительная информация..."
             />
           </div>
 
