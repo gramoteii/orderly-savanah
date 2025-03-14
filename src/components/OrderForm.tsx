@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { 
@@ -151,9 +150,13 @@ const OrderForm: React.FC = () => {
 
   const handleServiceSelect = (id: string, serviceName: string) => {
     const service = webStudioServices.find(s => s.name === serviceName);
+    
     if (service) {
       handleItemChange(id, 'name', service.name);
       handleItemChange(id, 'price', service.defaultPrice);
+    } else if (serviceName === 'custom') {
+      handleItemChange(id, 'name', 'custom');
+      handleItemChange(id, 'price', 0);
     }
   };
 
@@ -328,7 +331,7 @@ const OrderForm: React.FC = () => {
                 <div className="col-span-5">
                   <Label htmlFor={`item-name-${index}`}>Услуга</Label>
                   <Select
-                    value={item.name}
+                    value={item.name || ""}
                     onValueChange={(value) => handleServiceSelect(item.id, value)}
                   >
                     <SelectTrigger>

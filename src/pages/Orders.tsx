@@ -6,6 +6,7 @@ import OrderTable from '../components/OrderTable';
 import OrderBoard from '../components/OrderBoard'; 
 import OrderForm from '../components/OrderForm';
 import DeleteOrderDialog from '../components/DeleteOrderDialog';
+import MonthlyRevenueChart from '../components/MonthlyRevenueChart';
 import { useOrderStore } from '../store/orderStore';
 import { Button } from '@/components/ui/button';
 import { 
@@ -62,6 +63,8 @@ const Orders: React.FC = () => {
           </Button>
         </div>
       </div>
+      
+      <MonthlyRevenueChart />
       
       <OrderFilter />
       
