@@ -1,7 +1,6 @@
 
 import React from 'react';
 import Sidebar from './Sidebar';
-import ThemeToggle from './ThemeToggle';
 import { useLocation } from 'react-router-dom';
 
 interface LayoutProps {
@@ -24,13 +23,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <header className="border-b bg-card shadow-sm">
-          <div className="px-6 py-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-foreground">{getTitle()}</h1>
-            <ThemeToggle />
+        <header className="border-b bg-white shadow-sm">
+          <div className="px-6 py-4">
+            <h1 className="text-2xl font-bold text-gray-800">{getTitle()}</h1>
           </div>
         </header>
-        <main className="flex-1 overflow-auto bg-background p-6">
+        <main className="flex-1 overflow-auto bg-crm-gray p-6">
           {children}
         </main>
       </div>
