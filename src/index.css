@@ -43,6 +43,15 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 210 30% 92%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* CRM Colors */
+    --crm-blue: 216 100% 52%;
+    --crm-light-blue: 216 100% 95%;
+    --crm-dark-blue: 216 100% 40%;
+    --crm-gray: 210 17% 98%;
+    --crm-green: 152 69% 31%;
+    --crm-red: 354 70% 54%;
+    --crm-yellow: 45 100% 51%;
   }
 
   .dark {
@@ -73,6 +82,7 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
     --sidebar-background: 210 50% 20%;
     --sidebar-foreground: 210 40% 95%;
     --sidebar-primary: 210 100% 50%;
@@ -81,6 +91,15 @@
     --sidebar-accent-foreground: 210 40% 95%;
     --sidebar-border: 210 40% 25%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* CRM Colors - Dark Theme */
+    --crm-blue: 216 100% 60%;
+    --crm-light-blue: 216 30% 20%;
+    --crm-dark-blue: 216 100% 45%;
+    --crm-gray: 210 17% 8%;
+    --crm-green: 152 69% 35%;
+    --crm-red: 354 70% 60%;
+    --crm-yellow: 45 100% 60%;
   }
 }
 
@@ -103,11 +122,11 @@
 }
 
 .crm-table-header {
-  @apply border-b bg-crm-lightBlue px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-crm-darkBlue;
+  @apply border-b bg-secondary px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground;
 }
 
 .crm-table-cell {
-  @apply border-b border-gray-200 px-4 py-3 text-sm;
+  @apply border-b border-border px-4 py-3 text-sm;
 }
 
 .crm-status-badge {
@@ -115,17 +134,17 @@
 }
 
 .crm-status-new {
-  @apply bg-blue-100 text-blue-800;
+  @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100;
 }
 
 .crm-status-processing {
-  @apply bg-yellow-100 text-yellow-800;
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100;
 }
 
 .crm-status-completed {
-  @apply bg-green-100 text-green-800;
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100;
 }
 
 .crm-status-cancelled {
-  @apply bg-red-100 text-red-800;
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100;
 }
