@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,8 @@ import OrderBasicInfoSection from './form/OrderBasicInfoSection';
 import CustomerSection from './form/CustomerSection';
 import ServicesSection from './form/ServicesSection';
 import CommentsSection from './form/CommentsSection';
-import { useOrderForm, webStudioServices } from '../hooks/useOrderForm';
+import { useOrderForm } from '../hooks/useOrderForm';
+import { webStudioServices } from '../hooks/order/useOrderServices';
 
 const OrderForm: React.FC = () => {
   const { toast } = useToast();
