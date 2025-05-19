@@ -15,10 +15,12 @@ import {
   ResizablePanel,
   ResizableHandle
 } from "@/components/ui/resizable";
-import { List, Kanban, FileCode, PlusCircle, HardDrive } from 'lucide-react';
+import { List, Kanban, FileCode, PlusCircle, HardDrive, Rocket } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Orders: React.FC = () => {
-  const { filterOrders, setCurrentOrder, setEditModalOpen } = useOrderStore();
+  const { toast } = useToast();
+  const { filterOrders, setCurrentOrder, setEditModalOpen, filteredOrders } = useOrderStore();
   const [viewMode, setViewMode] = useState<'table' | 'board'>('board');
   const [isDataManagementOpen, setIsDataManagementOpen] = useState(false);
 
@@ -31,12 +33,22 @@ const Orders: React.FC = () => {
     setEditModalOpen(true);
   };
 
+  const handleQuickAction = () => {
+    toast({
+      title: "Быстрое действие",
+      description: `У вас ${filteredOrders.length} проектов. Нажмите на Доску или Таблицу для просмотра.`
+    });
+  };
+
   return (
     <Layout>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center">
           <FileCode className="h-6 w-6 mr-2 text-primary" />
           <h1 className="text-2xl font-bold">Проекты</h1>
+          <span className="ml-2 text-sm bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+            {filteredOrders.length} записей
+          </span>
         </div>
         <div className="flex space-x-2">
           <Button 
@@ -62,6 +74,15 @@ const Orders: React.FC = () => {
           >
             <HardDrive className="mr-2 h-4 w-4" />
             Управление данными
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-amber-600 border-amber-600 hover:bg-amber-50"
+            onClick={handleQuickAction}
+          >
+            <Rocket className="mr-2 h-4 w-4" />
+            Быстрое действие
           </Button>
           <Button 
             variant="default"

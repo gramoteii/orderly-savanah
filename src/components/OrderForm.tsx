@@ -62,7 +62,7 @@ const OrderForm: React.FC = () => {
   return (
     <Dialog open={isEditModalOpen} onOpenChange={setEditModalOpen}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
-        <OrderFormHeader isEditing={!!currentOrder} />
+        <OrderFormHeader isEditing={!!currentOrder} currentOrder={currentOrder} />
         
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <OrderBasicInfoSection 

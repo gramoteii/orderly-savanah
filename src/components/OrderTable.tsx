@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useOrderStore } from '../store/orderStore';
 import StatusBadge from './StatusBadge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash } from 'lucide-react';
+import { Eye, Edit, Trash, Copy } from 'lucide-react';
 import { Order } from '../data/orders';
+import { useToast } from '@/hooks/use-toast';
 
 const OrderTable: React.FC = () => {
   const navigate = useNavigate();
-  const { filteredOrders, setCurrentOrder, setEditModalOpen, setDeleteModalOpen } = useOrderStore();
+  const { toast } = useToast();
+  const { filteredOrders, setCurrentOrder, setEditModalOpen, setDeleteModalOpen, duplicateOrder } = useOrderStore();
 
   const handleViewOrder = (order: Order) => {
     navigate(`/orders/${order.id}`);
@@ -25,6 +27,15 @@ const OrderTable: React.FC = () => {
     e.stopPropagation();
     setCurrentOrder(order);
     setDeleteModalOpen(true);
+  };
+
+  const handleDuplicateOrder = (e: React.MouseEvent, order: Order) => {
+    e.stopPropagation();
+    const newOrder = duplicateOrder(order);
+    toast({
+      title: "Заказ дублирован",
+      description: `Создана копия заказа ${order.number}`
+    });
   };
 
   if (filteredOrders.length === 0) {
@@ -81,6 +92,14 @@ const OrderTable: React.FC = () => {
                       onClick={(e) => handleEditOrder(e, order)}
                     >
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                      onClick={(e) => handleDuplicateOrder(e, order)}
+                    >
+                      <Copy className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="outline" 

@@ -15,6 +15,7 @@ interface OrderState {
   addOrder: (order: Omit<Order, 'id'>) => void;
   updateOrder: (order: Order) => void;
   deleteOrder: (id: string) => void;
+  duplicateOrder: (order: Order) => Order;
   setCurrentOrder: (order: Order | null) => void;
   setSearchTerm: (term: string) => void;
   setStatusFilter: (status: OrderStatus | 'all') => void;
@@ -30,6 +31,22 @@ interface OrderState {
 const getSavedOrders = (): Order[] => {
   const savedOrders = loadFromLocalStorage<Order[]>(STORAGE_KEYS.ORDERS);
   return savedOrders || initialOrders;
+};
+
+// Generate a new order number based on the highest existing number
+const generateNewOrderNumber = (orders: Order[]) => {
+  // Extract numeric parts from order numbers
+  const numericParts = orders.map(order => {
+    const match = order.number.match(/\d+$/);
+    return match ? parseInt(match[0], 10) : 0;
+  });
+  
+  // Find the highest number and increment by 1
+  const highestNumber = Math.max(...numericParts, 0);
+  const newNumber = highestNumber + 1;
+  
+  // Format with leading zeros
+  return `ORD-${String(newNumber).padStart(3, '0')}`;
 };
 
 export const useOrderStore = create<OrderState>((set, get) => ({
@@ -75,6 +92,37 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       };
     });
     get().filterOrders();
+  },
+
+  duplicateOrder: (orderToDuplicate) => {
+    const { orders } = get();
+    
+    // Generate new ids for all items
+    const duplicatedItems = orderToDuplicate.items.map(item => ({
+      ...item,
+      id: nanoid()
+    }));
+    
+    // Create the new duplicate order
+    const duplicateOrder: Order = {
+      ...orderToDuplicate,
+      id: nanoid(),
+      number: generateNewOrderNumber(orders),
+      date: new Date().toISOString().split('T')[0], // Today's date
+      status: 'new', // Always set as new
+      items: duplicatedItems,
+      comments: orderToDuplicate.comments ? `[ДУБЛИКАТ] ${orderToDuplicate.comments}` : '[ДУБЛИКАТ]'
+    };
+    
+    // Add the new order to the store
+    set((state) => {
+      const updatedOrders = [...state.orders, duplicateOrder];
+      saveToLocalStorage(STORAGE_KEYS.ORDERS, updatedOrders);
+      return { orders: updatedOrders };
+    });
+    
+    get().filterOrders();
+    return duplicateOrder;
   },
 
   setCurrentOrder: (order) => {
