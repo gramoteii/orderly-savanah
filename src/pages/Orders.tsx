@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import OrderFilter from '../components/OrderFilter';
 import OrderTable from '../components/OrderTable';
@@ -7,6 +7,7 @@ import OrderBoard from '../components/OrderBoard';
 import OrderForm from '../components/OrderForm';
 import DeleteOrderDialog from '../components/DeleteOrderDialog';
 import MonthlyRevenueChart from '../components/MonthlyRevenueChart';
+import DataManagement from '../components/DataManagement';
 import { useOrderStore } from '../store/orderStore';
 import { Button } from '@/components/ui/button';
 import { 
@@ -14,12 +15,12 @@ import {
   ResizablePanel,
   ResizableHandle
 } from "@/components/ui/resizable";
-import { useState } from 'react';
-import { List, Kanban, FileCode, PlusCircle } from 'lucide-react';
+import { List, Kanban, FileCode, PlusCircle, HardDrive } from 'lucide-react';
 
 const Orders: React.FC = () => {
   const { filterOrders, setCurrentOrder, setEditModalOpen } = useOrderStore();
   const [viewMode, setViewMode] = useState<'table' | 'board'>('board');
+  const [isDataManagementOpen, setIsDataManagementOpen] = useState(false);
 
   useEffect(() => {
     filterOrders();
@@ -55,6 +56,14 @@ const Orders: React.FC = () => {
             Доска
           </Button>
           <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setIsDataManagementOpen(true)}
+          >
+            <HardDrive className="mr-2 h-4 w-4" />
+            Управление данными
+          </Button>
+          <Button 
             variant="default"
             onClick={handleCreateOrder}
           >
@@ -76,6 +85,7 @@ const Orders: React.FC = () => {
       
       <OrderForm />
       <DeleteOrderDialog />
+      <DataManagement open={isDataManagementOpen} onOpenChange={setIsDataManagementOpen} />
     </Layout>
   );
 };

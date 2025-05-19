@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { clientsData } from '../data/clients';
+import { saveToLocalStorage, loadFromLocalStorage, STORAGE_KEYS } from '../utils/localStorageUtils';
 
 export interface Client {
   id: string;
@@ -31,11 +32,19 @@ interface ClientState {
   getClientById: (id: string) => Client | undefined;
   incrementClientOrders: (id: string) => void;
   decrementClientOrders: (id: string) => void;
+  exportDataToJson: () => string;
+  importDataFromJson: (jsonData: string) => void;
 }
 
+// Load clients from localStorage or use initial data
+const getSavedClients = (): Client[] => {
+  const savedClients = loadFromLocalStorage<Client[]>(STORAGE_KEYS.CLIENTS);
+  return savedClients || clientsData;
+};
+
 export const useClientStore = create<ClientState>((set, get) => ({
-  clients: clientsData,
-  filteredClients: clientsData,
+  clients: getSavedClients(),
+  filteredClients: getSavedClients(),
   currentClient: null,
   searchTerm: '',
   isModalOpen: false,
@@ -46,26 +55,34 @@ export const useClientStore = create<ClientState>((set, get) => ({
       id: nanoid(),
       orders: 0
     };
-    set((state) => ({ 
-      clients: [...state.clients, newClient] 
-    }));
+    set((state) => {
+      const updatedClients = [...state.clients, newClient];
+      saveToLocalStorage(STORAGE_KEYS.CLIENTS, updatedClients);
+      return { clients: updatedClients };
+    });
     get().filterClients();
   },
 
   updateClient: (updatedClient) => {
-    set((state) => ({
-      clients: state.clients.map((client) => 
+    set((state) => {
+      const updatedClients = state.clients.map((client) => 
         client.id === updatedClient.id ? updatedClient : client
-      )
-    }));
+      );
+      saveToLocalStorage(STORAGE_KEYS.CLIENTS, updatedClients);
+      return { clients: updatedClients };
+    });
     get().filterClients();
   },
 
   deleteClient: (id) => {
-    set((state) => ({
-      clients: state.clients.filter((client) => client.id !== id),
-      currentClient: state.currentClient?.id === id ? null : state.currentClient
-    }));
+    set((state) => {
+      const updatedClients = state.clients.filter((client) => client.id !== id);
+      saveToLocalStorage(STORAGE_KEYS.CLIENTS, updatedClients);
+      return {
+        clients: updatedClients,
+        currentClient: state.currentClient?.id === id ? null : state.currentClient
+      };
+    });
     get().filterClients();
   },
 
@@ -104,22 +121,42 @@ export const useClientStore = create<ClientState>((set, get) => ({
   },
   
   incrementClientOrders: (id) => {
-    set((state) => ({
-      clients: state.clients.map(client => 
+    set((state) => {
+      const updatedClients = state.clients.map(client => 
         client.id === id 
           ? { ...client, orders: client.orders + 1 } 
           : client
-      )
-    }));
+      );
+      saveToLocalStorage(STORAGE_KEYS.CLIENTS, updatedClients);
+      return { clients: updatedClients };
+    });
   },
   
   decrementClientOrders: (id) => {
-    set((state) => ({
-      clients: state.clients.map(client => 
+    set((state) => {
+      const updatedClients = state.clients.map(client => 
         client.id === id && client.orders > 0
           ? { ...client, orders: client.orders - 1 } 
           : client
-      )
-    }));
+      );
+      saveToLocalStorage(STORAGE_KEYS.CLIENTS, updatedClients);
+      return { clients: updatedClients };
+    });
+  },
+
+  exportDataToJson: () => {
+    return JSON.stringify(get().clients, null, 2);
+  },
+
+  importDataFromJson: (jsonData) => {
+    try {
+      const parsedData = JSON.parse(jsonData) as Client[];
+      set({ clients: parsedData });
+      saveToLocalStorage(STORAGE_KEYS.CLIENTS, parsedData);
+      get().filterClients();
+    } catch (error) {
+      console.error('Error importing data:', error);
+      throw new Error('Invalid JSON format');
+    }
   }
 }));

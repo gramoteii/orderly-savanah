@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { Order, OrderStatus, initialOrders } from '../data/orders';
+import { saveToLocalStorage, loadFromLocalStorage, STORAGE_KEYS } from '../utils/localStorageUtils';
 
 interface OrderState {
   orders: Order[];
@@ -21,12 +22,20 @@ interface OrderState {
   setDeleteModalOpen: (open: boolean) => void;
   filterOrders: () => void;
   getOrderById: (id: string) => Order | undefined;
+  exportDataToJson: () => string;
+  importDataFromJson: (jsonData: string) => void;
 }
 
+// Load orders from localStorage or use initial data
+const getSavedOrders = (): Order[] => {
+  const savedOrders = loadFromLocalStorage<Order[]>(STORAGE_KEYS.ORDERS);
+  return savedOrders || initialOrders;
+};
+
 export const useOrderStore = create<OrderState>((set, get) => ({
-  orders: initialOrders,
+  orders: getSavedOrders(),
   currentOrder: null,
-  filteredOrders: initialOrders,
+  filteredOrders: getSavedOrders(),
   searchTerm: '',
   statusFilter: 'all',
   isEditModalOpen: false,
@@ -37,26 +46,34 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       ...order,
       id: nanoid()
     };
-    set((state) => ({ 
-      orders: [...state.orders, newOrder] 
-    }));
+    set((state) => {
+      const updatedOrders = [...state.orders, newOrder];
+      saveToLocalStorage(STORAGE_KEYS.ORDERS, updatedOrders);
+      return { orders: updatedOrders };
+    });
     get().filterOrders();
   },
 
   updateOrder: (updatedOrder) => {
-    set((state) => ({
-      orders: state.orders.map((order) => 
+    set((state) => {
+      const updatedOrders = state.orders.map((order) => 
         order.id === updatedOrder.id ? updatedOrder : order
-      )
-    }));
+      );
+      saveToLocalStorage(STORAGE_KEYS.ORDERS, updatedOrders);
+      return { orders: updatedOrders };
+    });
     get().filterOrders();
   },
 
   deleteOrder: (id) => {
-    set((state) => ({
-      orders: state.orders.filter((order) => order.id !== id),
-      currentOrder: state.currentOrder?.id === id ? null : state.currentOrder
-    }));
+    set((state) => {
+      const updatedOrders = state.orders.filter((order) => order.id !== id);
+      saveToLocalStorage(STORAGE_KEYS.ORDERS, updatedOrders);
+      return {
+        orders: updatedOrders,
+        currentOrder: state.currentOrder?.id === id ? null : state.currentOrder
+      };
+    });
     get().filterOrders();
   },
 
@@ -104,5 +121,21 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   getOrderById: (id) => {
     return get().orders.find((order) => order.id === id);
+  },
+
+  exportDataToJson: () => {
+    return JSON.stringify(get().orders, null, 2);
+  },
+
+  importDataFromJson: (jsonData) => {
+    try {
+      const parsedData = JSON.parse(jsonData) as Order[];
+      set({ orders: parsedData });
+      saveToLocalStorage(STORAGE_KEYS.ORDERS, parsedData);
+      get().filterOrders();
+    } catch (error) {
+      console.error('Error importing data:', error);
+      throw new Error('Invalid JSON format');
+    }
   }
 }));
